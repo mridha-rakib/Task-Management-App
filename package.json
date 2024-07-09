@@ -1,0 +1,22 @@
+{
+  "name": "task-management-application",
+  "version": "1.0.0",
+  "description": "task management app",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mridha-rakib/Task-Management-App.git"
+  },
+  "author": "Rakib Mahmud Mrida",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/mridha-rakib/Task-Management-App/issues"
+  },
+  "homepage": "https://github.com/mridha-rakib/Task-Management-App#readme",
+  "dependencies": {
+    "express": "^4.19.2"
+  }
+}
