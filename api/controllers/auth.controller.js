@@ -10,6 +10,13 @@ const authUser = asyncHandler(async (req, res) => {
 
   const user = await User.findOne({ email });
 
+  if (!user?.isActive) {
+    res.status(401);
+    throw new Error(
+      "User account has been deactivated, contact the administrator"
+    );
+  }
+
   if (user && (await user.matchPassword(password))) {
     generateToken(res, user._id);
     const { password: pass, ...rest } = user._doc;
@@ -24,7 +31,7 @@ const authUser = asyncHandler(async (req, res) => {
 // @route POST /api/users
 // @access public
 const registerUser = asyncHandler(async (req, res) => {
-  const { username, email, password } = req.body;
+  const { name, email, password, isAdmin, role, title } = req.body;
 
   const userExist = await User.findOne({ email });
   if (userExist) {
@@ -32,23 +39,19 @@ const registerUser = asyncHandler(async (req, res) => {
     throw new Error("User already exists");
   }
 
-  if (
-    !username ||
-    !email ||
-    !password ||
-    username === "" ||
-    email === "" ||
-    password === ""
-  ) {
-    res.status(400);
-    throw new Error("All fields are required");
-  }
-
-  const user = await new User({ username, email, password });
-
   try {
-    await user.save();
-    res.status(201).json({ message: "User registered successfully" });
+    const user = await new User.create({ username, email, password });
+
+    if (user) {
+      isAdmin ? generateToken(res, user._id) : null;
+
+      const { password: pass, ...rest } = user._doc;
+
+      res.status(201).json(rest);
+    } else {
+      res.status(401);
+      throw new Error("Invalid login credentials");
+    }
   } catch (error) {
     if (error.code === 11000) {
       // Duplicate key error
@@ -61,35 +64,9 @@ const registerUser = asyncHandler(async (req, res) => {
   }
 });
 
-// const google = asyncHandler(async (req, res) => {
-//   const { email, name, googlePhotoUrl } = req.body;
+const logoutUser = asyncHandler(async (req, res) => {
+  res.cookie("jwt", "", { httpOnly: true, expires: new Date(0) });
+  res.status(200).json({ message: "Logged out successfully" });
+});
 
-//   const user = await User.findOne({ email });
-
-//   if (user) {
-//     generateToken(res, user._id);
-//     const { password, ...rest } = user._doc;
-//     res.status(200).json(rest);
-//   } else {
-//     const generatedPassword =
-//       Math.random().toString(36).slice(-8) +
-//       Math.random().toString(36).slice(-8);
-
-//     const newUser = User.create({
-//       username:
-//         name.toLowerCase().split(" ").join("") +
-//         Math.random().toString(9).slice(-4),
-//       email,
-//       password: generatedPassword,
-//       profilePicture: googlePhotoUrl,
-//     });
-
-//     generateToken(res, newUser._id);
-
-//     const { password, ...rest } = newUser._doc;
-
-//     res.status(200).json(rest);
-//   }
-// });
-
-export { registerUser, authUser };
+export { registerUser, authUser, logoutUser };
